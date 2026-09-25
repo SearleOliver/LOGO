@@ -178,8 +178,7 @@ expr:
 		{ printf "/" ; NONE }
 |   expr TIMES term
 		{ printf "*" ; NONE }
-|   expr MOD term
-		{ printf "%" ; NONE }
+
 |   term 
 		{ NONE }
 
@@ -190,6 +189,8 @@ term:
         { printf "%d " $1; CST $1 }
 |	REF
 		{ printf "%s" $1 ; NONE }
-| LPAR expr RPAR
+|   expr MOD expr
+		{ printf "%" ; NONE }
+|	 LPAR expr RPAR
 		{NONE}
 ;
