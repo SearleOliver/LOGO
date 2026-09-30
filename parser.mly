@@ -174,23 +174,34 @@ expr:
 		{ printf "+" ; NONE }
 |   expr MINUS term
 		{ printf "-" ; NONE }
-|   expr DIVIDE term
-		{ printf "/" ; NONE }
-|   expr TIMES term
-		{ printf "*" ; NONE }
-
 |   term 
 		{ NONE }
 
 ;
 
 term:
-|   INT 
-        { printf "%d " $1; CST $1 }
+|	term TIMES factor
+		{ printf "*" ; NONE }
+|   term DIVIDE factor
+		{ printf "/" ; NONE }
+|   term MOD factor
+		{ printf "%%" ; NONE }
+|   factor
+		{$1}
+;
+
+factor:
+  | final POWER factor 
+  		{printf "^" ; NONE }
+  | final
+  		{$1}
+;
+
+final:
+|   INT
+		{ printf "%d " $1; CST $1 }
 |	REF
 		{ printf "%s" $1 ; NONE }
-|   expr MOD expr
-		{ printf "%" ; NONE }
-|	 LPAR expr RPAR
-		{NONE}
+|	LPAR expr RPAR
+		{ NONE }
 ;

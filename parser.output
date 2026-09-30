@@ -19,15 +19,21 @@
 
   14  expr : expr PLUS term
   15       | expr MINUS term
-  16       | expr DIVIDE term
-  17       | expr TIMES term
-  18       | term
+  16       | term
 
-  19  term : INT
-  20       | REF
-  21       | LPAR expr RPAR
+  17  term : term TIMES factor
+  18       | term DIVIDE factor
+  19       | term MOD factor
+  20       | factor
 
-  22  %entry% : '\001' program
+  21  factor : final POWER factor
+  22         | final
+
+  23  final : INT
+  24        | REF
+  25        | LPAR expr RPAR
+
+  26  %entry% : '\001' program
 
 state 0
 	$accept : . %entry% $end  (0)
@@ -39,7 +45,7 @@ state 0
 
 
 state 1
-	%entry% : '\001' . program  (22)
+	%entry% : '\001' . program  (26)
 	opt_cmd_seq : .  (2)
 
 	FORWARD  shift 3
@@ -74,6 +80,8 @@ state 3
 
 	expr  goto 18
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 4
@@ -84,8 +92,10 @@ state 4
 	REF  shift 17
 	.  error
 
-	expr  goto 20
+	expr  goto 22
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 5
@@ -102,8 +112,10 @@ state 6
 	REF  shift 17
 	.  error
 
-	expr  goto 21
+	expr  goto 23
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 7
@@ -114,8 +126,10 @@ state 7
 	REF  shift 17
 	.  error
 
-	expr  goto 22
+	expr  goto 24
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 8
@@ -126,14 +140,16 @@ state 8
 	REF  shift 17
 	.  error
 
-	expr  goto 23
+	expr  goto 25
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 9
 	cmd : MAKE . NAME expr  (10)
 
-	NAME  shift 24
+	NAME  shift 26
 	.  error
 
 
@@ -144,9 +160,9 @@ state 10
 
 
 state 11
-	%entry% : '\001' program .  (22)
+	%entry% : '\001' program .  (26)
 
-	.  reduce 22
+	.  reduce 26
 
 
 state 12
@@ -169,7 +185,7 @@ state 13
 	PRINTS  shift 10
 	$end  reduce 3
 
-	cmd  goto 25
+	cmd  goto 27
 
 
 state 14
@@ -179,40 +195,38 @@ state 14
 
 
 state 15
-	term : LPAR . expr RPAR  (21)
+	final : LPAR . expr RPAR  (25)
 
 	LPAR  shift 15
 	INT  shift 16
 	REF  shift 17
 	.  error
 
-	expr  goto 26
+	expr  goto 28
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
 state 16
-	term : INT .  (19)
+	final : INT .  (23)
 
-	.  reduce 19
+	.  reduce 23
 
 
 state 17
-	term : REF .  (20)
+	final : REF .  (24)
 
-	.  reduce 20
+	.  reduce 24
 
 
 state 18
 	cmd : FORWARD expr .  (6)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 6
 	FORWARD  reduce 6
 	LEFT  reduce 6
@@ -225,22 +239,63 @@ state 18
 
 
 state 19
-	expr : term .  (18)
+	expr : term .  (16)
+	term : term . TIMES factor  (17)
+	term : term . DIVIDE factor  (18)
+	term : term . MOD factor  (19)
 
-	.  reduce 18
+	TIMES  shift 31
+	DIVIDE  shift 32
+	MOD  shift 33
+	$end  reduce 16
+	PLUS  reduce 16
+	MINUS  reduce 16
+	RPAR  reduce 16
+	FORWARD  reduce 16
+	LEFT  reduce 16
+	HOME  reduce 16
+	PRINT  reduce 16
+	RIGHT  reduce 16
+	BACKWARD  reduce 16
+	MAKE  reduce 16
+	PRINTS  reduce 16
 
 
 state 20
+	term : factor .  (20)
+
+	.  reduce 20
+
+
+state 21
+	factor : final . POWER factor  (21)
+	factor : final .  (22)
+
+	POWER  shift 34
+	$end  reduce 22
+	PLUS  reduce 22
+	MINUS  reduce 22
+	TIMES  reduce 22
+	DIVIDE  reduce 22
+	MOD  reduce 22
+	RPAR  reduce 22
+	FORWARD  reduce 22
+	LEFT  reduce 22
+	HOME  reduce 22
+	PRINT  reduce 22
+	RIGHT  reduce 22
+	BACKWARD  reduce 22
+	MAKE  reduce 22
+	PRINTS  reduce 22
+
+
+state 22
 	cmd : LEFT expr .  (8)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 8
 	FORWARD  reduce 8
 	LEFT  reduce 8
@@ -252,17 +307,13 @@ state 20
 	PRINTS  reduce 8
 
 
-state 21
+state 23
 	cmd : PRINT expr .  (12)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 12
 	FORWARD  reduce 12
 	LEFT  reduce 12
@@ -274,17 +325,13 @@ state 21
 	PRINTS  reduce 12
 
 
-state 22
+state 24
 	cmd : RIGHT expr .  (7)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 7
 	FORWARD  reduce 7
 	LEFT  reduce 7
@@ -296,17 +343,13 @@ state 22
 	PRINTS  reduce 7
 
 
-state 23
+state 25
 	cmd : BACKWARD expr .  (11)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 11
 	FORWARD  reduce 11
 	LEFT  reduce 11
@@ -318,7 +361,7 @@ state 23
 	PRINTS  reduce 11
 
 
-state 24
+state 26
 	cmd : MAKE NAME . expr  (10)
 
 	LPAR  shift 15
@@ -326,32 +369,30 @@ state 24
 	REF  shift 17
 	.  error
 
-	expr  goto 31
+	expr  goto 35
 	term  goto 19
+	factor  goto 20
+	final  goto 21
 
 
-state 25
+state 27
 	cmd_seq : cmd_seq cmd .  (5)
 
 	.  reduce 5
 
 
-state 26
+state 28
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
-	term : LPAR expr . RPAR  (21)
+	final : LPAR expr . RPAR  (25)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
-	RPAR  shift 32
+	PLUS  shift 29
+	MINUS  shift 30
+	RPAR  shift 36
 	.  error
 
 
-state 27
+state 29
 	expr : expr PLUS . term  (14)
 
 	LPAR  shift 15
@@ -359,10 +400,12 @@ state 27
 	REF  shift 17
 	.  error
 
-	term  goto 33
+	term  goto 37
+	factor  goto 20
+	final  goto 21
 
 
-state 28
+state 30
 	expr : expr MINUS . term  (15)
 
 	LPAR  shift 15
@@ -370,42 +413,66 @@ state 28
 	REF  shift 17
 	.  error
 
-	term  goto 34
-
-
-state 29
-	expr : expr TIMES . term  (17)
-
-	LPAR  shift 15
-	INT  shift 16
-	REF  shift 17
-	.  error
-
-	term  goto 35
-
-
-state 30
-	expr : expr DIVIDE . term  (16)
-
-	LPAR  shift 15
-	INT  shift 16
-	REF  shift 17
-	.  error
-
-	term  goto 36
+	term  goto 38
+	factor  goto 20
+	final  goto 21
 
 
 state 31
+	term : term TIMES . factor  (17)
+
+	LPAR  shift 15
+	INT  shift 16
+	REF  shift 17
+	.  error
+
+	factor  goto 39
+	final  goto 21
+
+
+state 32
+	term : term DIVIDE . factor  (18)
+
+	LPAR  shift 15
+	INT  shift 16
+	REF  shift 17
+	.  error
+
+	factor  goto 40
+	final  goto 21
+
+
+state 33
+	term : term MOD . factor  (19)
+
+	LPAR  shift 15
+	INT  shift 16
+	REF  shift 17
+	.  error
+
+	factor  goto 41
+	final  goto 21
+
+
+state 34
+	factor : final POWER . factor  (21)
+
+	LPAR  shift 15
+	INT  shift 16
+	REF  shift 17
+	.  error
+
+	factor  goto 42
+	final  goto 21
+
+
+state 35
 	cmd : MAKE NAME expr .  (10)
 	expr : expr . PLUS term  (14)
 	expr : expr . MINUS term  (15)
-	expr : expr . DIVIDE term  (16)
-	expr : expr . TIMES term  (17)
 
-	PLUS  shift 27
-	MINUS  shift 28
-	TIMES  shift 29
-	DIVIDE  shift 30
+	PLUS  shift 29
+	MINUS  shift 30
 	$end  reduce 10
 	FORWARD  reduce 10
 	LEFT  reduce 10
@@ -417,35 +484,81 @@ state 31
 	PRINTS  reduce 10
 
 
-state 32
-	term : LPAR expr RPAR .  (21)
+state 36
+	final : LPAR expr RPAR .  (25)
 
-	.  reduce 21
+	.  reduce 25
 
 
-state 33
+state 37
 	expr : expr PLUS term .  (14)
+	term : term . TIMES factor  (17)
+	term : term . DIVIDE factor  (18)
+	term : term . MOD factor  (19)
 
-	.  reduce 14
+	TIMES  shift 31
+	DIVIDE  shift 32
+	MOD  shift 33
+	$end  reduce 14
+	PLUS  reduce 14
+	MINUS  reduce 14
+	RPAR  reduce 14
+	FORWARD  reduce 14
+	LEFT  reduce 14
+	HOME  reduce 14
+	PRINT  reduce 14
+	RIGHT  reduce 14
+	BACKWARD  reduce 14
+	MAKE  reduce 14
+	PRINTS  reduce 14
 
 
-state 34
+state 38
 	expr : expr MINUS term .  (15)
+	term : term . TIMES factor  (17)
+	term : term . DIVIDE factor  (18)
+	term : term . MOD factor  (19)
 
-	.  reduce 15
+	TIMES  shift 31
+	DIVIDE  shift 32
+	MOD  shift 33
+	$end  reduce 15
+	PLUS  reduce 15
+	MINUS  reduce 15
+	RPAR  reduce 15
+	FORWARD  reduce 15
+	LEFT  reduce 15
+	HOME  reduce 15
+	PRINT  reduce 15
+	RIGHT  reduce 15
+	BACKWARD  reduce 15
+	MAKE  reduce 15
+	PRINTS  reduce 15
 
 
-state 35
-	expr : expr TIMES term .  (17)
+state 39
+	term : term TIMES factor .  (17)
 
 	.  reduce 17
 
 
-state 36
-	expr : expr DIVIDE term .  (16)
+state 40
+	term : term DIVIDE factor .  (18)
 
-	.  reduce 16
+	.  reduce 18
 
 
-23 terminals, 8 nonterminals
-23 grammar rules, 37 states
+state 41
+	term : term MOD factor .  (19)
+
+	.  reduce 19
+
+
+state 42
+	factor : final POWER factor .  (21)
+
+	.  reduce 21
+
+
+23 terminals, 10 nonterminals
+27 grammar rules, 43 states

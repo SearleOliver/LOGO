@@ -44,6 +44,7 @@ rule token = parse
 |   "-"    {MINUS}
 |   "*"    {TIMES}
 |   "/"    {DIVIDE}
+|    "^"	{POWER}
 |    "%"    {MOD}
 |   "("    {LPAR}
 |   ")"    {RPAR}
