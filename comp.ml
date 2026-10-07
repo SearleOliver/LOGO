@@ -85,7 +85,8 @@ let rec comp_cmd cmd =
 	| SYSCALL (cmd, args) ->
 		(List.flatten (List.map comp_expr (List.rev args)))
 		@ [INVOKE cmd]
-	 
+	| MAKE (i, e) ->
+		(comp_expr e) @ [SET_GLOB i]
 	| _ -> failwith "unsupported command!"
 	 
 
@@ -99,6 +100,18 @@ and comp_expr expr =
 		failwith "attempt to compile NONE expression!"
 	| CST n ->
 		[PUSH n]
+	| VAR i ->
+		[GET_GLOB i]
+	| BINOP (op, e1, e2) ->
+    let op_inst = match op with
+      | OP_ADD -> ADD
+      | OP_SUB -> SUB
+      | OP_MUL -> MUL
+      | OP_DIV -> DIV
+      | OP_MOD -> MOD
+      | OP_POW -> failwith "POW" (* Remplacez par POW si l'instruction est définie dans vm/stackinst.ml *)
+    in
+    (comp_expr e2) @ (comp_expr e1) @ [op_inst]
 	| _ -> failwith "unsupported expression!"
 	 
 

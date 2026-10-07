@@ -155,13 +155,13 @@ cmd:
 |	RIGHT expr
 		{ SYSCALL (Logo.cRIGHT, [$2]) }
 |   LEFT expr
-		{ NOP }
+		{ SYSCALL (Logo.cLEFT, [$2]) }
 |   HOME
-		{ NOP }
+		{ SYSCALL (Logo.cHOME, [])  }
 |   MAKE NAME expr
-		{ NOP }
+		{ let idx = make_var $2 in MAKE (idx, $3) }
 |   BACKWARD expr
-		{ NOP }
+		{ SYSCALL (Logo.cBACKWARD, [$2])  }
 |	PRINT expr
 		{ PRINT $2 }
 |	PRINTS
@@ -171,37 +171,37 @@ cmd:
 
 expr:
 |   expr PLUS term
-		{ printf "+" ; NONE }
+		/*printf "+" ;*/ { BINOP (OP_ADD, $1, $3) }
 |   expr MINUS term
-		{ printf "-" ; NONE }
+		/*printf "-" ;*/ { BINOP (OP_SUB, $1, $3) }
 |   term 
-		{ NONE }
+		{ $1 }
 
 ;
 
 term:
 |	term TIMES factor
-		{ printf "*" ; NONE }
+		/*printf "*" ;*/{  BINOP (OP_MUL, $1, $3) }
 |   term DIVIDE factor
-		{ printf "/" ; NONE }
+		/*printf "/" ;*/{  BINOP (OP_DIV, $1, $3) }
 |   term MOD factor
-		{ printf "%%" ; NONE }
+		/*printf "%%" ;*/ { BINOP (OP_MOD, $1, $3) }
 |   factor
 		{$1}
 ;
 
 factor:
   | final POWER factor 
-  		{printf "^" ; NONE }
+  		/*printf "^" ;*/{ BINOP (OP_POW, $1, $3) }
   | final
   		{$1}
 ;
 
 final:
 |   INT
-		{ printf "%d " $1; CST $1 }
-|	REF
-		{ printf "%s" $1 ; NONE }
+		/*printf "%d " $1;*/{  CST $1 }
+|   REF
+		/*printf "%s" $1 ;*/ { let idx = get_var $1 in if idx = -1 then error "Variable non définie" else  VAR idx }
 |	LPAR expr RPAR
-		{ NONE }
+		{ $2 }
 ;
